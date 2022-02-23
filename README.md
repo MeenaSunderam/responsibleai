@@ -1,1 +1,1 @@
-# resonsibleai
+# responsibleai
