@@ -13,7 +13,7 @@ from sklearn import preprocessing
 from sklearn.preprocessing import StandardScaler 
 
 #library for privacy engine
-#from opacus import PrivacyEngine
+from opacus import PrivacyEngine
 
 class ChurnDataset(Dataset):
  

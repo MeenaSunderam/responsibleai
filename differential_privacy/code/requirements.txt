@@ -1,1 +1,1 @@
-Opacus==1.0
+opacus
