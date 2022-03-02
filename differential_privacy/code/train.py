@@ -3,6 +3,7 @@ import pandas as pd
 import argparse
 import os
 import json
+import csv
 
 import torch
 import torch.nn as nn
@@ -112,6 +113,14 @@ def train(trainloader, net, optimizer, n_epochs=100):
         
     return net
 
+def write_diffpriv(epsilon, target_delta):
+    header = ['Epsilon', 'target_delta']
+    data = [epsilon, target_delta]
+    
+    with open(os.path.join(args.model_dir, 'differential_privacy.csv'), 'w', encoding='UTF8',newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(header)
+        writer.writerow(data)
 
 def _parse_args():
     parser = argparse.ArgumentParser()
@@ -140,13 +149,14 @@ if __name__ == "__main__":
     optimizer = optim.Adam(net.parameters(), weight_decay=0.0001, lr=0.003)
     model = train(trainloader, net, optimizer, 50)
     
+    print("#### Model training with Differential Privacy ####")
+    
     ## train model with privacy engine
     max_per_sample_grad_norm = 1.5
     sample_rate = batch_size/len(train_ds)
     noise_multiplier = 0.8
     
     net = get_CHURN_model()
-
     optimizer = optim.Adam(net.parameters(), weight_decay=0.0001, lr=0.003)
 
     privacy_engine = PrivacyEngine(
@@ -164,4 +174,7 @@ if __name__ == "__main__":
         torch.save(model.state_dict(), f)
         
     # Save the Privacy engine values
+    epsilon, best_alpha = privacy_engine.get_privacy_spent()
+    write_diffpriv(epsilon, privacy_engine.target_delta)
     
+    print (f" ε = {epsilon:.2f}, δ = {privacy_engine.target_delta}")
