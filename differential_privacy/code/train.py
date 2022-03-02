@@ -117,7 +117,7 @@ def write_diffpriv(epsilon, target_delta):
     header = ['Epsilon', 'target_delta']
     data = [epsilon, target_delta]
     
-    with open(os.path.join(args.model_dir, 'differential_privacy.csv'), 'w', encoding='UTF8',newline='') as f:
+    with open(("/opt/ml/checkpoints/differential_privacy.csv"), 'w', encoding='UTF8',newline='') as f:
         writer = csv.writer(f)
         writer.writerow(header)
         writer.writerow(data)
@@ -129,6 +129,7 @@ def _parse_args():
     # model_dir is always passed in from SageMaker. By default this is a S3 path under the default bucket.
     parser.add_argument('--model-dir', type=str, default=os.environ['SM_MODEL_DIR'])
     parser.add_argument('--output-data-dir', type=str, default=os.environ['SM_OUTPUT_DATA_DIR'])
+    parser.add_argument('--output', type=str, default=os.environ['SM_OUTPUT_DIR'])
     parser.add_argument('--sm-model-dir', type=str, default=os.environ.get('SM_MODEL_DIR'))
     parser.add_argument('--train', type=str, default=os.environ.get('SM_CHANNEL_TRAIN'))
     parser.add_argument('--hosts', type=list, default=json.loads(os.environ.get('SM_HOSTS')))
@@ -140,6 +141,8 @@ def _parse_args():
 if __name__ == "__main__":
     args, unknown = _parse_args()
     
+    print(args)
+    
     batch_size = 50
     csv_file = os.path.join(args.train, 'churn.csv')
     trainloader, testloader, train_ds, test_ds = get_dataloader(csv_file, batch_size)
@@ -149,7 +152,7 @@ if __name__ == "__main__":
     optimizer = optim.Adam(net.parameters(), weight_decay=0.0001, lr=0.003)
     model = train(trainloader, net, optimizer, 50)
     
-    print("#### Model training with Differential Privacy ####")
+    print("####------- Model training with Differential Privacy -------####")
     
     ## train model with privacy engine
     max_per_sample_grad_norm = 1.5
