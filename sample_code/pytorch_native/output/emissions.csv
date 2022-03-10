@@ -1,0 +1,2 @@
+timestamp,experiment_id,project_name,duration,emissions,energy_consumed,country_name,country_iso_code,region,on_cloud,cloud_provider,cloud_region
+2022-03-10T17:01:20,4e2f719e-4246-4d4b-84cd-0649068e3c24,churn_prediction,18.12556028366089,0.000219429418842438,0.0005944431946335458,United States,USA,virginia,N,,
