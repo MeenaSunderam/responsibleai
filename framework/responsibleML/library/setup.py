@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name='responsibleML',
     packages=setuptools.find_packages(),
-    version='0.1.0',
+    version='0.1.1',
     description='Responsible ML',
     author='Meenakshisundaram.t@gmail.com',
     license='MIT',
