@@ -31,6 +31,10 @@ At the time of this writing, the MVP of the SPECTRE framework supports
 
 You can add a bunch of Models for a specific use case to the SPECTRE framework and SPECTRE ranks them on the basis of its over health or health per dimension
 
+![image](https://user-images.githubusercontent.com/7538839/160517041-f36f6a2a-9d60-4f34-8fb8-aa0042261027.png)
+
+You can add a bunch of Models for a specific use case to the SPECTRE framework and SPECTRE ranks them on the basis of its over health or health per dimension
+
 
 ## Installation
 
