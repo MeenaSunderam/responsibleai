@@ -1,4 +1,4 @@
-# SPECTRE - With great powers comes great Responsibility
+# SPECTRE - with great powers comes great responsibility
 
 ## What is SPECTRE
 
@@ -46,12 +46,17 @@ pip install -i https://test.pypi.org/simple/responsibleML
 
 ## Usage
 
-from aigovernance import responsibleML
+from aigovernance import spectre as spectre
 
-responsibleModel = responsibleML.rML(modeltype = "", 
-                                     explained = False, 
-                                     emissions = 700, 
-                                     bias = 0.2, 
-                                     epsilon = 0.8)
+spectre.add_model(modelname = "",
+                  modeltype = "", 
+                  explained = False, 
+                  emissions = 700, 
+                  bias = 0.2, 
+                  epsilon = 0.8)
 
-raiIndex = responsibleModel.rai_index()
+spectre.get_model(modelname = "")
+
+spectre.list_models()
+
+spectre.rank_models()
