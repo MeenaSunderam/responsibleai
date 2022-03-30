@@ -1,0 +1,18 @@
+[
+   {
+      "model name":"model2",
+      "model type":"CNN",
+      "emissions":50,
+      "privacy":0.7,
+      "bias":0.7,
+      "explainability":false
+   },
+   {
+      "model name":"model1",
+      "model type":"deeplearning",
+      "emissions":1000,
+      "privacy":0.5,
+      "bias":0.5,
+      "explainability":true
+   }
+]

@@ -4,10 +4,10 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
     
 setuptools.setup(
-    name='responsibleML',
+    name='spectre',
     packages=setuptools.find_packages(),
     version='0.1.1',
-    description='Responsible ML',
+    description='SPECTRE',
     author='Meenakshisundaram.t@gmail.com',
     license='MIT',
     install_requires=[],

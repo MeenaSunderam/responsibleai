@@ -1,0 +1,7 @@
+setup.py
+aigovernance/__init__.py
+aigovernance/spectre.py
+spectre.egg-info/PKG-INFO
+spectre.egg-info/SOURCES.txt
+spectre.egg-info/dependency_links.txt
+spectre.egg-info/top_level.txt
