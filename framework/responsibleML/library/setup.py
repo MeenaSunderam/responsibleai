@@ -11,7 +11,7 @@ setuptools.setup(
     author='Meenakshisundaram.t@gmail.com',
     license='MIT',
     install_requires=[],
-    setup_requires=['pytest-runner'],
+    setup_requires=['pytest-runner', 'pandas', 'numpy', 'codecarbon', 'opacus'],
     tests_require=['pytest==4.4.1'],
     test_suite='tests',
     python_requires='>=3.6',

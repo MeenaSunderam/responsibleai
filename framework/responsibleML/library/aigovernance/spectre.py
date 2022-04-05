@@ -1,7 +1,11 @@
 import json
 import os
+import pandas as pd
+import numpy as np
+from codecarbon import EmissionsTracker as ET
+#from opacus import PrivacyEngine 
 
-class spectre_model:
+class responsibleModel:
     
     __modelname__ = ""
     __modeltype__ = ""
@@ -9,29 +13,40 @@ class spectre_model:
     __bias__ = 0.0
     __explained__ = False
     __epsilon__ = 0.0
+    __tracker__ = ET(project_name = "",
+            measure_power_secs = 15,
+            save_to_file = False)
     
     def __init__(self,):
-        __modelname__ = ""
-        __modeltype__ = ""
-        __emissions__ = 0.0
-        __bias__ = 0.0
-        __explained__ = False
-        __epsilon__ = 0.0
+        self.__modelname__ = ""
+        self.__modeltype__ = ""
+        self.__emissions__ = 0.0
+        self.__bias__ = 0.0
+        self.__explained__ = False
+        self.__epsilon__ = 0.0
+        
+        __tracker__ = ET(project_name = "",
+            measure_power_secs = 15,
+            save_to_file = False)
 
     def __init__(self, 
                  modelname: str,
                  modeltype:str,
-                 explained:bool,
-                 emissions:float,
-                 bias:float,
-                 epsilon:float):
-
+                 explained:bool = False,
+                 emissions:float = 0.0,
+                 bias:float= 0.0,
+                 epsilon:float = 0.0):
+        
         self.__modelname__ = modelname
         self.__modeltype__ = modeltype
         self.__emissions__ = emissions
         self.__bias__ = bias
         self.__explained__ = explained
         self.__epsilon__ = epsilon
+    
+        __tracker__ = ET(project_name = modelname,
+            measure_power_secs = 15,
+            save_to_file = False)
     
     def explained(self, isexplained: bool):
         self.__explained__ = isexplained
@@ -104,7 +119,7 @@ class spectre_model:
         privacy_index = self.__calculate_privacy_index()
         bias_index = self.__calculate_bias_index()
         explain_index = self.__calculate_explainability_index()
-        RAI_index = self.model_rai_index()
+        RAI_index = self.rai_index()
         
         value = json.dumps({"model name": self.__modelname__,
                             "model type": self.__modeltype__,
@@ -116,7 +131,7 @@ class spectre_model:
 
         return value
         
-    def model_rai_index(self):
+    def rai_index(self):
     
         index = 0.0
         weights = 0.2
@@ -135,6 +150,29 @@ class spectre_model:
 
         return index
 
+    def track_emissions(self):
+        # Calculate Emissions
+        self.__tracker__.start()
+        
+    def stop_tracking(self):
+        self.__emissions__ =  self.__tracker__.stop()
+        
+    def calculate_bias(self, df_label: str):
+        
+        # Get the number of classes & samples
+        label_classes = df_label.value_counts(ascending=True)
+        totalvalues = label_classes.sum()
+        min_class_count = label_classes.values[1]
+        
+        #calcualte the bias
+        class_balance = min_class_count / totalvalues
+        if class_balance >= 0.4:
+            self.__bias__ = 3
+        elif class_balance > 0.2 and class_balance < 0.4:
+            self.__bias__ = 2
+        else:
+            self.__bias__ = 1
+                
 class models:
     model_list = []
     
@@ -142,7 +180,7 @@ class models:
         self.model_list = []
     
     def add_model(self, modelname, modeltype, explained, emissions, bias, epsilon):
-        model = spectre_model(modelname, modeltype, explained, emissions, bias, epsilon)
+        model = responsibleModel(modelname, modeltype, explained, emissions, bias, epsilon)
         self.model_list.append(model)
         
     def add_model(self, model):
