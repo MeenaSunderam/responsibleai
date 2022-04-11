@@ -47,7 +47,7 @@ You can add a bunch of Models for a specific use case to the SPECTRE framework a
 
 3.Responsible index is calcualted using ResponsibleML.  Install ResponsibleML
 
->     !pip install spectre
+>     !pip install -i https://test.pypi.org/simple/ spectre
 
 ## Usage
 
