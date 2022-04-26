@@ -2,51 +2,55 @@ import json
 import os
 import pandas as pd
 import numpy as np
+import urllib3
 from codecarbon import EmissionsTracker as ET
-#from opacus import PrivacyEngine 
+from opacus import PrivacyEngine 
 
 class responsibleModel:
     
     __modelname__ = ""
-    __modeltype__ = ""
+    __framework__ = ""
     __emissions__ = 0.0
-    __bias__ = 0.0
+    __classbalance__ = 0.0
     __explained__ = False
     __epsilon__ = 0.0
-    __tracker__ = ET(project_name = "",
-            measure_power_secs = 15,
-            save_to_file = False)
+    __tracker__ = None
+    __privacy_engine__ = None
     
     def __init__(self,):
         self.__modelname__ = ""
-        self.__modeltype__ = ""
+        self.__framework__ = ""
         self.__emissions__ = 0.0
-        self.__bias__ = 0.0
+        self.__classbalance__ = 0.0
         self.__explained__ = False
         self.__epsilon__ = 0.0
         
-        __tracker__ = ET(project_name = "",
+        self.__tracker__ = ET(project_name = "",
             measure_power_secs = 15,
             save_to_file = False)
+        
+        self.__privacy_engine__ = PrivacyEngine()
 
     def __init__(self, 
                  modelname: str,
-                 modeltype:str,
+                 framework:str,
                  explained:bool = False,
                  emissions:float = 0.0,
-                 bias:float= 0.0,
+                 classbalance:float= 0.0,
                  epsilon:float = 0.0):
         
         self.__modelname__ = modelname
-        self.__modeltype__ = modeltype
+        self.__framework__ = framework
         self.__emissions__ = emissions
-        self.__bias__ = bias
+        self.__classbalance__ = classbalance
         self.__explained__ = explained
         self.__epsilon__ = epsilon
     
-        __tracker__ = ET(project_name = modelname,
+        self.__tracker__ = ET(project_name = modelname,
             measure_power_secs = 15,
             save_to_file = False)
+        
+        self.__privacy_engine__ = PrivacyEngine()
     
     def explained(self, isexplained: bool):
         self.__explained__ = isexplained
@@ -54,18 +58,16 @@ class responsibleModel:
     def emissions(self, carbon_emissions: float):
         self.__emissions__ = carbon_emissions
 
-    def bias(self, label_bias: float):
-        self.__bias__ = label_bias
+    def classbalance(self, minclass: float):
+        self.__classbalance__ = minclass
 
     def epsilon(self, privacy_epsilon: bool):
         self.__epsilon__ = privacy_epsilon
 
-    def model(self, modeltype: str):
-        self.__modeltype__ = modeltype
+    def model(self, framework: str):
+        self.__framework__ = framework
         
-    def __calculate_emissions_index(self):
-
-        print(self.__emissions__)
+    def calculate_emissions_index(self):
 
         if self.__emissions__ <= 500:
             emissionIndex = 3
@@ -76,7 +78,7 @@ class responsibleModel:
 
         return emissionIndex
 
-    def __calculate_privacy_index(self):
+    def calculate_privacy_index(self):
         if self.__epsilon__ <= 1:
             privacyIndex = 3
         elif self.__epsilon__ > 1 and self.__epsilon__ <= 10:
@@ -86,11 +88,11 @@ class responsibleModel:
 
         return privacyIndex
 
-    def __calculate_explainability_index(self):
+    def calculate_explainability_index(self):
 
         expIndex = 1
 
-        if self.__modeltype__ == "deeplearning":
+        if self.__framework__ == "deeplearning":
             return expIndex
 
         if self.__explained__ == True:
@@ -100,13 +102,14 @@ class responsibleModel:
 
         return expIndex
 
-    def __calculate_bias_index(self):
-        if self.__bias__ <= 0.25 and self.__bias__ >= -0.25:
+    def calculate_bias_index(self):
+        
+        if self.__classbalance__ >= 0.4:
             bindex = 3
-        elif self.__bias__ > 0.5 or self.__bias__ < -0.5:
-            bindex = 1
-        else:
+        elif self.__classbalance__ > 0.2 and self.__classbalance__ < 0.4:
             bindex = 2
+        else:
+            bindex = 1
 
         return bindex
     
@@ -115,14 +118,14 @@ class responsibleModel:
     
     def model_rai_components(self):
         
-        emission_index = self.__calculate_emissions_index()
-        privacy_index = self.__calculate_privacy_index()
-        bias_index = self.__calculate_bias_index()
-        explain_index = self.__calculate_explainability_index()
+        emission_index = self.calculate_emissions_index()
+        privacy_index = self.calculate_privacy_index()
+        bias_index = self.calculate_bias_index()
+        explain_index = self.calculate_explainability_index()
         RAI_index = self.rai_index()
         
         value = json.dumps({"model name": self.__modelname__,
-                            "model type": self.__modeltype__,
+                            "framework": self.__framework__,
                             "rai index": RAI_index,
                             "emissions": emission_index,
                             "privacy": privacy_index,
@@ -134,17 +137,12 @@ class responsibleModel:
     def rai_index(self):
     
         index = 0.0
-        weights = 0.2
+        weights = 0.25
 
-        emission_index = self.__calculate_emissions_index()
-        privacy_index = self.__calculate_privacy_index()
-        bias_index = self.__calculate_bias_index()
-        explain_index = self.__calculate_explainability_index()
-
-        print(emission_index)
-        print(privacy_index)
-        print(bias_index)
-        print(explain_index)
+        emission_index = self.calculate_emissions_index()
+        privacy_index = self.calculate_privacy_index()
+        bias_index = self.calculate_bias_index()
+        explain_index = self.calculate_explainability_index()
 
         index = weights * (emission_index + privacy_index + bias_index + explain_index)
 
@@ -165,22 +163,30 @@ class responsibleModel:
         min_class_count = label_classes.values[1]
         
         #calcualte the bias
-        class_balance = min_class_count / totalvalues
-        if class_balance >= 0.4:
-            self.__bias__ = 3
-        elif class_balance > 0.2 and class_balance < 0.4:
-            self.__bias__ = 2
-        else:
-            self.__bias__ = 1
-                
+        self.__classbalance__ = min_class_count / totalvalues
+        
+    def privatize(self, model, optimizer, dataloader):
+        
+        if self.__framework__ == "pytorch":
+            model, optimizer, dataloader = self.__privacy_engine__.make_private(module=model,
+                                                                            optimizer=optimizer,
+                                                                            data_loader=dataloader,
+                                                                            noise_multiplier=1.0,
+                                                                            max_grad_norm=1.0,)
+            
+            return model, optimizer, dataloader
+        
+    def calcualte_privacy_score(self, delta):
+        self.__epsilon__ = self.__privacy_engine__.get_epsilon(delta)
+    
 class models:
     model_list = []
     
     def __init__(self):
         self.model_list = []
     
-    def add_model(self, modelname, modeltype, explained, emissions, bias, epsilon):
-        model = responsibleModel(modelname, modeltype, explained, emissions, bias, epsilon)
+    def add_model(self, modelname, framework, explained, emissions, bias, epsilon):
+        model = responsibleModel(modelname, framework, explained, emissions, bias, epsilon)
         self.model_list.append(model)
         
     def add_model(self, model):
@@ -208,9 +214,20 @@ class models:
                 return model
         return None
     
-    def rank_models(self, rank_type = None):
+    def rank_models(self, rank_by = "rai_index"):
         sorted_json = ""
-        sorted_models = sorted(self.model_list, key=lambda x: x.model_rai_index(), reverse=True)
+        
+        if rank_by == "rai_index":
+            sorted_models = sorted(self.model_list, key=lambda x: x.rai_index(), reverse=True)
+        elif rank_by == "emissions":
+            sorted_models = sorted(self.model_list, key=lambda x: x.calculate_emissions_index(), reverse=True)
+        elif rank_by == "privacy":
+            sorted_models = sorted(self.model_list, key=lambda x: x.calculate_privay_index(), reverse=True)
+        elif rank_by == "bias":
+            sorted_models = sorted(self.model_list, key=lambda x: x.calculate_bias_index(), reverse=True)
+        elif rank_by == "explainability":
+            sorted_models = sorted(self.model_list, key=lambda x: x.calculate_explainability_index(), reverse=True)
+            
         for model in sorted_models:
             sorted_json += model.model_rai_components()
             if(model != sorted_models[-1]):
