@@ -1,10 +1,13 @@
 import json
-import os
 import pandas as pd
 import numpy as np
-import urllib3
+import logging
 from codecarbon import EmissionsTracker as ET
 from opacus import PrivacyEngine 
+from captum.attr import IntegratedGradients
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 class responsibleModel:
     
@@ -12,7 +15,7 @@ class responsibleModel:
     __framework__ = ""
     __emissions__ = 0.0
     __classbalance__ = 0.0
-    __explained__ = False
+    __interpretable_degree__ = 0.0
     __epsilon__ = 0.0
     __tracker__ = None
     __privacy_engine__ = None
@@ -22,7 +25,7 @@ class responsibleModel:
         self.__framework__ = ""
         self.__emissions__ = 0.0
         self.__classbalance__ = 0.0
-        self.__explained__ = False
+        self.__interpretable_degree__ = 0.0
         self.__epsilon__ = 0.0
         
         self.__tracker__ = ET(project_name = "",
@@ -34,7 +37,7 @@ class responsibleModel:
     def __init__(self, 
                  modelname: str,
                  framework:str,
-                 explained:bool = False,
+                 interpretable_degree:float = 0.0,
                  emissions:float = 0.0,
                  classbalance:float= 0.0,
                  epsilon:float = 0.0):
@@ -43,7 +46,7 @@ class responsibleModel:
         self.__framework__ = framework
         self.__emissions__ = emissions
         self.__classbalance__ = classbalance
-        self.__explained__ = explained
+        self.__interpretable_degree__ = interpretable_degree
         self.__epsilon__ = epsilon
     
         self.__tracker__ = ET(project_name = modelname,
@@ -52,19 +55,19 @@ class responsibleModel:
         
         self.__privacy_engine__ = PrivacyEngine()
     
-    def explained(self, isexplained: bool):
-        self.__explained__ = isexplained
+    def set_interpretability(self, interpretable_degree: float):
+        self.__interpretable_degree__ = interpretable_degree
 
-    def emissions(self, carbon_emissions: float):
+    def set_emissions(self, carbon_emissions: float):
         self.__emissions__ = carbon_emissions
 
-    def classbalance(self, minclass: float):
+    def set_classbalance(self, minclass: float):
         self.__classbalance__ = minclass
 
-    def epsilon(self, privacy_epsilon: bool):
+    def set_epsilon(self, privacy_epsilon: bool):
         self.__epsilon__ = privacy_epsilon
 
-    def model(self, framework: str):
+    def set_framework(self, framework: str):
         self.__framework__ = framework
         
     def calculate_emissions_index(self):
@@ -88,19 +91,18 @@ class responsibleModel:
 
         return privacyIndex
 
-    def calculate_explainability_index(self):
+    def calculate_interpretability_index(self):
 
-        expIndex = 1
+        interIndex = 1
 
-        if self.__framework__ == "deeplearning":
-            return expIndex
-
-        if self.__explained__ == True:
-            expIndex = 3
+        if self.__interpretable_degree__ > .70:
+            interIndex = 3
+        elif self.__interpretable_degree__ > .50 and self.__interpretable_degree__ < .70:
+            interIndex = 2
         else:
-            expIndex = 2
+            interIndex = 1
 
-        return expIndex
+        return interIndex
 
     def calculate_bias_index(self):
         
@@ -113,24 +115,30 @@ class responsibleModel:
 
         return bindex
     
-    def describe(self):
-        return json.dumps(self.__dict__)
+    def describe_model(self):
+        value = json.dumps({"model name": self.__modelname__,
+                    "framework": self.__framework__,
+                    "emissions": self.__emissions__,
+                    "interpretability": self.__interpretable_degree__,
+                    "privacy": self.__epsilon__,
+                    "bias": self.__classbalance__,})        
+        return value
     
     def model_rai_components(self):
         
         emission_index = self.calculate_emissions_index()
         privacy_index = self.calculate_privacy_index()
         bias_index = self.calculate_bias_index()
-        explain_index = self.calculate_explainability_index()
+        interpret_index = self.calculate_interpretability_index()
         RAI_index = self.rai_index()
         
         value = json.dumps({"model name": self.__modelname__,
                             "framework": self.__framework__,
                             "rai index": RAI_index,
-                            "emissions": emission_index,
-                            "privacy": privacy_index,
-                            "bias": bias_index,
-                            "explainability": explain_index})
+                            "emission_index": emission_index,
+                            "privacy_index": privacy_index,
+                            "bias_index": bias_index,
+                            "interpretability_index": interpret_index})
 
         return value
         
@@ -142,9 +150,9 @@ class responsibleModel:
         emission_index = self.calculate_emissions_index()
         privacy_index = self.calculate_privacy_index()
         bias_index = self.calculate_bias_index()
-        explain_index = self.calculate_explainability_index()
+        interpret_index = self.calculate_interpretability_index()
 
-        index = weights * (emission_index + privacy_index + bias_index + explain_index)
+        index = weights * (emission_index + privacy_index + bias_index + interpret_index)
 
         return index
 
@@ -165,28 +173,43 @@ class responsibleModel:
         #calcualte the bias
         self.__classbalance__ = min_class_count / totalvalues
         
-    def privatize(self, model, optimizer, dataloader):
+    def privatize(self, model, optimizer, dataloader, noise_multiplier, max_grad_norm):
         
-        if self.__framework__ == "pytorch":
-            model, optimizer, dataloader = self.__privacy_engine__.make_private(module=model,
+        model, optimizer, dataloader = self.__privacy_engine__.make_private(module=model,
                                                                             optimizer=optimizer,
                                                                             data_loader=dataloader,
-                                                                            noise_multiplier=1.0,
-                                                                            max_grad_norm=1.0,)
-            
-            return model, optimizer, dataloader
+                                                                            noise_multiplier = noise_multiplier,
+                                                                            max_grad_norm= max_grad_norm)
+
+        return model, optimizer, dataloader
         
-    def calcualte_privacy_score(self, delta):
+    def calculate_privacy_score(self, delta):
         self.__epsilon__ = self.__privacy_engine__.get_epsilon(delta)
     
+    def interpret(self, input_tensor, model,target_class):
+        
+        ig = IntegratedGradients(model)
+        input_tensor.requires_grad_()
+        attr, delta = ig.attribute(input_tensor,target=target_class, return_convergence_delta=True)
+        attr = attr.detach().numpy()
+        importance = np.mean(attr, axis=0)
+        
+        importance = np.abs(importance)        
+        importance[::-1].sort()
+        
+        total_weightage = np.sum(importance)
+        key_features_weightage = importance[0] + importance[1] + importance[2]
+        
+        __interpretable_degree__ = key_features_weightage / total_weightage
+            
 class models:
     model_list = []
     
     def __init__(self):
         self.model_list = []
     
-    def add_model(self, modelname, framework, explained, emissions, bias, epsilon):
-        model = responsibleModel(modelname, framework, explained, emissions, bias, epsilon)
+    def add_model(self, modelname, framework, intrepretability, emissions, bias, epsilon):
+        model = responsibleModel(modelname, framework, intrepretability, emissions, bias, epsilon)
         self.model_list.append(model)
         
     def add_model(self, model):
@@ -225,8 +248,8 @@ class models:
             sorted_models = sorted(self.model_list, key=lambda x: x.calculate_privay_index(), reverse=True)
         elif rank_by == "bias":
             sorted_models = sorted(self.model_list, key=lambda x: x.calculate_bias_index(), reverse=True)
-        elif rank_by == "explainability":
-            sorted_models = sorted(self.model_list, key=lambda x: x.calculate_explainability_index(), reverse=True)
+        elif rank_by == "interpretability":
+            sorted_models = sorted(self.model_list, key=lambda x: x.calculate_interpretability_index(), reverse=True)
             
         for model in sorted_models:
             sorted_json += model.model_rai_components()
