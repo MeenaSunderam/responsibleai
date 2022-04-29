@@ -20,6 +20,14 @@ SPECTRE is a AI Governance framework.  With increased use of AI / ML in critical
 5.  Add the details of the SPECTRE components of your model to SPECTRE Framework
 6.  SPECTRE calculates an Index (float) that denotes the health of the model.  Higher the number better the model
 
+## Calculation
+
+Responsible Index is a measure of the following and is a scale between 1 to 3.  3 being a responsible Model
+
+1. Carbon Emissions
+2. Differential Privacy
+3. Bias (Imbalance class)
+4. Explainability
 
 ## Support
 
@@ -49,7 +57,16 @@ You can add a bunch of Models for a specific use case to the SPECTRE framework a
 
 >     !pip install -i https://test.pypi.org/simple/ spectre
 
-## Usage
+## How it works
+
+1. AI Governance SPECTRE is the overarching framework for responsible AI
+2. SPECTRE is across 7 dimensions - Security, Privacy, Explainability, Trust, bias and Emissions
+3. Current Framework support the above 4 for calculating RAI index
+4. SPETRE has 
+    a.  Model List (list of all models that you created for calculating RAI Index)
+    b.  Models - every model created by you for the use case.
+
+## Code sample
 
 1. Import the package in your code
 
@@ -64,11 +81,7 @@ You can add a bunch of Models for a specific use case to the SPECTRE framework a
 
 >     r_model.calcualte_bias(label_df)
 
-4. Model Explainability - given there is no straight forward way to identify if the model explainability is performed, you will have to add it independently
-
->     r_model.explained(isExplained)
-
-5. Carbon Emissions - For calculating carbon emissions, before you start your model training, start the tracker.  Once the model training is complete, stop the tracker
+4. Carbon Emissions - For calculating carbon emissions, before you start your model training, start the tracker.  Once the model training is complete, stop the tracker
 
 >     r_model.track_emissions()
 > 
@@ -76,7 +89,14 @@ You can add a bunch of Models for a specific use case to the SPECTRE framework a
 > 
 >     r_model.stop_tracking()
 
-6. Differential Privacy - [Work in Progress]
+5.  Model Interpretability - Ability of the model to be interpretable by the top 3 features by > 70%
+
+>     r_model.intrepret(input_tensor, model,target_class)
+
+6. Differential Privacy - 
+
+>     priv_model, priv_opt, priv_datasetloader = r_model.privatize(dp_model, optimizer, train_dataloader, noise_multiplier, max_per_sample_grad_norm) 
+>     r_model.calculate_privacy_score(delta=1e-5)
 
 7. Responsible Index:  You can now retrieve the responsible index of the model using
 

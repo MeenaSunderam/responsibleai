@@ -49,11 +49,7 @@ Responsible Index is a measure of the following and is a scale between 1 to 3.  
 
 >     r_model.calcualte_bias(label_df)
 
-4. Model Explainability - given there is no straight forward way to identify if the model explainability is performed, you will have to add it independently
-
->     r_model.explained(isExplained)
-
-5. Carbon Emissions - For calculating carbon emissions, before you start your model training, start the tracker.  Once the model training is complete, stop the tracker
+4. Carbon Emissions - For calculating carbon emissions, before you start your model training, start the tracker.  Once the model training is complete, stop the tracker
 
 >     r_model.track_emissions()
 > 
@@ -61,7 +57,14 @@ Responsible Index is a measure of the following and is a scale between 1 to 3.  
 > 
 >     r_model.stop_tracking()
 
-6. Differential Privacy - [Work in Progress]
+5.  Model Interpretability - Ability of the model to be interpretable by the top 3 features by > 70%
+
+>     r_model.intrepret(input_tensor, model,target_class)
+
+6. Differential Privacy - 
+
+>     priv_model, priv_opt, priv_datasetloader = r_model.privatize(dp_model, optimizer, train_dataloader, noise_multiplier, max_per_sample_grad_norm) 
+>     r_model.calculate_privacy_score(delta=1e-5)
 
 7. Responsible Index:  You can now retrieve the responsible index of the model using
 
