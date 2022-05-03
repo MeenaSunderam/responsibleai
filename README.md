@@ -1,8 +1,8 @@
-# SPECTRE - with great powers comes great responsibility
+# Responsible AI - with great powers comes great responsibility
 
-## What is SPECTRE
+## What is Responsible AI
 
-SPECTRE is a AI Governance framework.  With increased use of AI / ML in critical decision making process, SPECTRE provides a objective index for measuring the health of the model across the following dimensions
+Responsible AI is a AI Governance framework.  With increased use of AI / ML in critical decision making process, Responsible AI provides a objective index for measuring the health of the model across the following dimensions
 
 - Security:  Who can access the Model in production
 - Privacy:  Differential Privacy of data used in model training exercise
@@ -15,10 +15,9 @@ SPECTRE is a AI Governance framework.  With increased use of AI / ML in critical
 ## How does it work
 
 1.  Build the Model using framework of your choice.  
-2.  Use any package to decipher the SPECTRE components.  For eg. Code Carbon for Carbon Emissions, FairTorch for Bias, SageMaker Clarify for Bias, MSFT Interpret ML for Transparency of the Model etc...
-4.  Import the SPECTRE package (Python package)
-5.  Add the details of the SPECTRE components of your model to SPECTRE Framework
-6.  SPECTRE calculates an Index (float) that denotes the health of the model.  Higher the number better the model
+2.  Import the Responsible AI package (Python package)
+3.  Add the details of the Responsible AI components of your model to Responsible AI Framework
+4.  SPECTRE calculates an Index (float) that denotes the health of the model.  Higher the number better the model
 
 ## Calculation
 
@@ -53,16 +52,20 @@ You can add a bunch of Models for a specific use case to the SPECTRE framework a
 
 >     !pip install opacus
 
+2.Interpretability is calculated usig [Captum](https://captum.ai/).  Install Captum
+
+>     !pip install captum
+
 3.Responsible index is calcualted using ResponsibleML.  Install ResponsibleML
 
 >     !pip install -i https://test.pypi.org/simple/ spectre
 
 ## How it works
 
-1. AI Governance SPECTRE is the overarching framework for responsible AI
-2. SPECTRE is across 7 dimensions - Security, Privacy, Explainability, Trust, bias and Emissions
+1. AI Governance is the overarching framework for responsible AI
+2. Responsible AI is across 7 dimensions - Security, Privacy, Explainability, Trust, bias and Emissions
 3. Current Framework support the above 4 for calculating RAI index
-4. SPETRE has 
+4. Responsible AI has 
     a.  Model List (list of all models that you created for calculating RAI Index)
     b.  Models - every model created by you for the use case.
 
