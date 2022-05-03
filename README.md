@@ -5,11 +5,11 @@
 Responsible AI is a AI Governance framework.  With increased use of AI / ML in critical decision making process, Responsible AI provides a objective index for measuring the health of the model across the following dimensions
 
 - Security:  Who can access the Model in production
-- Privacy:  Differential Privacy of data used in model training exercise
-- Explainability:  Ability of the model to explain the prediction
+- Differential Privacy:  Differential Privacy of data used in model training exercise
+- Interpretability:  Ability of the model to be interpretable
 - Consistency:  Model consistency across multiple test data sets
 - Transparency:  Interpretability of the Model
-- Responsble: Responsibility on Bias and Fairness of the Model
+- Bias and Fairness: Bias and Fairness of the Model
 - Environment friendly:  Carbon Emissions of the Model training / Inference
 
 ## How does it work
@@ -17,30 +17,21 @@ Responsible AI is a AI Governance framework.  With increased use of AI / ML in c
 1.  Build the Model using framework of your choice.  
 2.  Import the Responsible AI package (Python package)
 3.  Add the details of the Responsible AI components of your model to Responsible AI Framework
-4.  SPECTRE calculates an Index (float) that denotes the health of the model.  Higher the number better the model
-
-## Calculation
-
-Responsible Index is a measure of the following and is a scale between 1 to 3.  3 being a responsible Model
-
-1. Carbon Emissions
-2. Differential Privacy
-3. Bias (Imbalance class)
-4. Explainability
+4.  Responsible AI calculates an Index (float) that denotes the health of the model.  Higher the number better the model
 
 ## Support
 
-At the time of this writing, the MVP of the SPECTRE framework supports 
+At the time of this writing, the MVP of the Responsible AI framework supports the following dimensions
 - Differential Privacy
-- Explainability
-- Responsibility 
+- Interpretability
+- Bias (Imbalance class)
 - Environment Friendly (Carbon emissions)
 
 You can add a bunch of Models for a specific use case to the SPECTRE framework and SPECTRE ranks them on the basis of its over health or health per dimension
 
 ![image](https://user-images.githubusercontent.com/7538839/160517464-a716c6d9-bbf3-4255-8710-d090e11abf1a.png)
 
-You can add a bunch of Models for a specific use case to the SPECTRE framework and SPECTRE ranks them on the basis of its over health or health per dimension
+You can add a bunch of Models for a specific use case to the Responsible AI framework and Responsible AI ranks them on the basis of its over health or health per dimension
 
 ## Pre-requisistes
 
